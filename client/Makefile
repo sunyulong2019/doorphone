@@ -1,5 +1,5 @@
 SRC = $(wildcard *.c)
-ELF = client 
+ELF = client.out
 
 CPPFLAGS += -Wall
 CPPFLAGS += -DDEBUG

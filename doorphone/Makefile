@@ -1,5 +1,5 @@
 SRC = $(wildcard *.c)
-ELF = doorphone 
+ELF = doorphone.out 
 
 CPPFLAGS += -Wall
 CPPFLAGS += -DDEBUG
