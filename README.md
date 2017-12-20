@@ -14,7 +14,7 @@
 
 ### 编程环境
 * Ubuntu16.04
-* [GEC210开发板](https://item.taobao.com/item.htm?spm=a1z10.1-c.w5003-6427619857.1.45ee61bboSErWr&id=38029903389&scene=taobao_shop)
+* [GEC6818开发板](https://weidian.com/item.html?itemID=2167617741)
 * JPEG制式摄像头
 
 ### 技术点
