@@ -32,7 +32,7 @@ int sock_init(int num, char *peer_ip, unsigned short port)
 	if(sockfd == -1)
 	{
 		fprintf(stderr, "[%s][%s][%d] socket() failed: %s\n",
-						__FILE__, __FUNCTION__, __LINE__, strerror(errno));
+				__FILE__, __FUNCTION__, __LINE__, strerror(errno));
 		exit(0);
 	}
 

@@ -4,7 +4,7 @@
 //
 //  文件: doorphone/doorphone/doorphone.c
 //  日期: 2017-9
-//  描述: 智能门禁对讲系统——主控程序（业主端）
+//  描述: 智能楼宇对讲系统——主控程序（业主端）
 //
 //  作者: Vincent Lin (林世霖)  微信公众号：秘籍酷
 //  技术微店: http://weidian.com/?userid=260920190
@@ -91,6 +91,7 @@ void *touch_panel(void *arg)
 		switch(pos(x, y))
 		{
 		case BTN1: // （监控开关，可主动打开观察大堂情况，也可被客户端的来访请求激活）
+			printf("%d，监控开关\n", __LINE__);
 			FLIP_OVER(g_monitor);
 			show_jpg(g_monitor==ON ? btn1_on_jpgdata : btn1_off_jpgdata,
 					 g_monitor==ON ? btn1_on_size : btn1_off_size, NOTPIP, 0, 0);
@@ -100,6 +101,7 @@ void *touch_panel(void *arg)
 			break;
 
 		case BTN2: // （开门）
+			printf("%d，开了门\n", __LINE__);
 			FLIP_OVER(g_door_ctl);
 			show_jpg(g_door_ctl==ON ? btn2_on_jpgdata : btn2_off_jpgdata,
 					 g_door_ctl==ON ? btn2_on_size : btn2_off_size, NOTPIP, 720, 0);
@@ -107,6 +109,7 @@ void *touch_panel(void *arg)
 			break;
 
 		case BTN3: // （本地语音开关）
+			printf("%d, 本地语音开关\n", __LINE__);
 			FLIP_OVER(g_send_pcm);
 			printf("%s\n", g_send_pcm==ON ? "g_send_pcm --> ON" : "g_send_pcm --> OFF");
 			show_jpg(g_send_pcm==ON ? btn3_on_jpgdata : btn3_off_jpgdata,
@@ -115,6 +118,7 @@ void *touch_panel(void *arg)
 			break;
 
 		case BTN4: //（本地视频开关） 
+			printf("%d, 本地视频开关\n", __LINE__);
 			FLIP_OVER(g_pip);
 			FLIP_OVER(g_send_jpg);
 			printf("%s\n", g_send_jpg==ON ? "g_send_jpg --> ON" : "g_send_jpg --> OFF");
@@ -317,22 +321,17 @@ void *prepare_pcm(void *arg)
 
 
 		// 等待来客的来访铃声
-		printf("[%s][%d]\n", __FUNCTION__, __LINE__);
 		sem_wait(&door_ring);
 
-		// 关闭当前赈灾使用的音频设备
-		printf("[%s][%d]\n", __FUNCTION__, __LINE__);
+		// 关闭当前正在使用的音频设备
+    	snd_pcm_drain(g_sound_recv->handle);  
+		snd_pcm_close(g_sound_recv->handle);  
 
-	    snd_pcm_drain(g_sound_recv->handle);  
-    	snd_pcm_close(g_sound_recv->handle);  
+    	snd_pcm_drain(g_sound_send->handle);  
+		snd_pcm_close(g_sound_send->handle);  
 
-	    snd_pcm_drain(g_sound_send->handle);  
-    	snd_pcm_close(g_sound_send->handle);  
-		printf("[%s][%d]\n", __FUNCTION__, __LINE__);
-
-    	// 来访铃声结束，重新打开音频设备
-    	sem_wait(&door_ring);
-		printf("[%s][%d]\n", __FUNCTION__, __LINE__);
+		// 来访铃声结束，重新打开音频设备
+		sem_wait(&door_ring);
 	}
 
 	pthread_exit(NULL);
@@ -419,12 +418,12 @@ void *send_state(void *arg)
 void *recv_state(void *arg)
 {
 	pthread_detach(pthread_self());
-
 	char state;
 	int m;
 	while(1)
 	{
 		m = recvfrom(g_udp_sockfd[STATE], &state, 1, 0, NULL, NULL);
+		
 		if(m < 0 && errno == EAGAIN)
 		{
 			usleep(150*1000); // 对端没有启动，延迟150毫秒
@@ -433,9 +432,11 @@ void *recv_state(void *arg)
 		if(m < 0)
 		{
 			fprintf(stderr, "[%s][%s][%d] recvfrom() failed: %s\n",
-							__FILE__, __FUNCTION__, __LINE__, strerror(errno));
+				__FILE__, __FUNCTION__, __LINE__, strerror(errno));
 			exit(0);
 		}
+		
+		printf("[%s][%d]\n", __FUNCTION__, __LINE__);
 
 		switch(state)
 		{
@@ -445,9 +446,10 @@ void *recv_state(void *arg)
 			g_someone_is_calling = ON;
 			sem_post(&door_ring);
 
-			usleep(100*1000);
 			fprintf(stderr, "门铃响起... ...");
-			system("./madplay door_ring.mp3"); // 播放门铃音乐
+			system("./madplay ring.mp3"); // 播放门铃
+			usleep(500*1000);
+			system("./madplay ring.mp3"); // 播放门铃
 			fprintf(stderr, "门铃结束\n");
 
 			g_someone_is_calling = OFF;
@@ -531,7 +533,6 @@ int main(int argc, char *argv[]) // ./talk <IP>
 	pthread_create(&t3, NULL, recv_jpg, NULL); // 图像接收并显示
 	pthread_create(&t4, NULL, send_jpg, NULL); // 图像摄制并发送
 
-
 	// 初始化触摸屏设备
 	ts_init("/dev/event0");
 	
@@ -539,7 +540,8 @@ int main(int argc, char *argv[]) // ./talk <IP>
 	pthread_t t5;
 	xpa.sched_priority = 1;
 	pthread_attr_setschedparam(&attr, &xpa);
-	pthread_create(&t5, &attr, touch_panel, NULL); // 触摸屏控制逻辑
+	//pthread_create(&t5, &attr, touch_panel, NULL); // 触摸屏控制逻辑
+	pthread_create(&t5, NULL, touch_panel, NULL); // 触摸屏控制逻辑
 
 	// 控制信号线程
 	pthread_t t6, t7;

@@ -25,10 +25,11 @@ void ts_init(char *device_name)
 {
 	// 以阻塞的方式打开触摸屏，得到代表触摸屏的指针ts
 	g_ts = ts_open(device_name, 0);
+	printf("device_name: %s\n", device_name);
 	if(g_ts == NULL)
 	{
 		fprintf(stderr, "[%s][%s][%d] ts_open() failed: %s\n",
-						__FILE__, __FUNCTION__, __LINE__, strerror(errno));
+			__FILE__, __FUNCTION__, __LINE__, strerror(errno));
 		exit(0);
 	}
 

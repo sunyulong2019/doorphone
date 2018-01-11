@@ -31,7 +31,7 @@ void cam_info_display(void)
 	if(ioctl(g_caminfo->camfd, VIDIOC_QUERYCAP, &cap) == -1)
 	{
 		fprintf(stderr, "[%s][%s][%d]: ioctl() failed: %s\n",
-						__FILE__, __FUNCTION__, __LINE__, strerror(errno));
+			__FILE__, __FUNCTION__, __LINE__, strerror(errno));
 		exit(0);
 	}
 	printf("driver:%s\n", cap.driver);
@@ -47,21 +47,26 @@ void cam_info_display(void)
 	if(ioctl(g_caminfo->camfd, VIDIOC_G_FMT, &fmt) == -1)
 	{
 		fprintf(stderr, "[%s][%s][%d]: ioctl() failed: %s\n",
-						__FILE__, __FUNCTION__, __LINE__, strerror(errno));
+			__FILE__, __FUNCTION__, __LINE__, strerror(errno));
 		exit(0);
 	}
 
-	printf("type:  %s\n", fmt.type==1 ? "V4L2_BUF_TYPE_VIDEO_CAPTURE" : "unknown" /* 参考：/usr/include/linux/videodev2.h:131 */);
+	/* 参考：/usr/include/linux/videodev2.h:131 */
+	printf("type:  %s\n", fmt.type==1 ? "V4L2_BUF_TYPE_VIDEO_CAPTURE" : "unknown");
 	printf("width: %d, ", g_caminfo->width = fmt.fmt.pix.width);
 	printf("height:%d\n", g_caminfo->height= fmt.fmt.pix.height);
 
 	char fmtstr[8] = {0};
 	memcpy(fmtstr, &fmt.fmt.pix.pixelformat, 4);
 	printf("pixelformat: %s\n", fmtstr);
-	printf("field: %d\n", fmt.fmt.pix.field /* 参考：/usr/include/linux/videodev2.h:85 */);
+
+	/* 参考：/usr/include/linux/videodev2.h:85 */
+	printf("field: %d\n", fmt.fmt.pix.field);
 	printf("bytesperline: %d\n", fmt.fmt.pix.bytesperline);
 	printf("sizeimage: %d\n", fmt.fmt.pix.sizeimage);
-	printf("colorspace: %s\n", fmt.fmt.pix.colorspace==7 ? "V4L2_COLORSPACE_JPEG" : "unknown" /* 参考：/usr/include/linux/videodev2.h:183 */);
+
+	/* 参考：/usr/include/linux/videodev2.h:183 */
+	printf("colorspace: %s\n", fmt.fmt.pix.colorspace==7 ? "V4L2_COLORSPACE_JPEG" : "unknown");
 	printf("priv: %d\n", fmt.fmt.pix.priv);
 
 	// 显示当前FPS
@@ -71,13 +76,14 @@ void cam_info_display(void)
 	if(ioctl(g_caminfo->camfd, VIDIOC_G_PARM, &parm) == -1)
 	{
 		fprintf(stderr, "[%s][%s][%d]: ioctl() failed: %s\n",
-						__FILE__, __FUNCTION__, __LINE__, strerror(errno));
+			__FILE__, __FUNCTION__, __LINE__, strerror(errno));
 		exit(0);
 	}
 
 	printf("Frame rate: %u/%u\n",
-				parm.parm.capture.timeperframe.denominator,
-				parm.parm.capture.timeperframe.numerator);
+		parm.parm.capture.timeperframe.denominator,
+		parm.parm.capture.timeperframe.numerator);
+
 	printf("USB CAM's output mode: %d\n", parm.parm.output.outputmode);
 
 	printf("↑↑↑↑↑↑↑ 摄像头参数 ↑↑↑↑↑↑↑\n\n");
@@ -121,7 +127,7 @@ void cam_config(int xres, int yres, uint32_t pixfmt)
 	if(ioctl(g_caminfo->camfd, VIDIOC_S_PARM, &parm) == -1)
 	{
 		fprintf(stderr, "[%s][%s][%d]: ioctl() failed: %s\n",
-						__FILE__, __FUNCTION__, __LINE__, strerror(errno));
+			__FILE__, __FUNCTION__, __LINE__, strerror(errno));
 	}
 
 	// 再次获取帧率，看看是否设置成功
@@ -144,7 +150,7 @@ void cam_config(int xres, int yres, uint32_t pixfmt)
 	if(ioctl(g_caminfo->camfd, VIDIOC_QUERYCTRL, &queryctrl) == -1)
 	{
 		fprintf(stderr, "[%s][%s][%d]: ioctl() failed: %s\n",
-						__FILE__, __FUNCTION__, __LINE__, strerror(errno));
+			__FILE__, __FUNCTION__, __LINE__, strerror(errno));
 	}
 
 	struct v4l2_control control;
@@ -154,7 +160,7 @@ void cam_config(int xres, int yres, uint32_t pixfmt)
 	if(ioctl(g_caminfo->camfd, VIDIOC_S_CTRL, &control) == -1)
 	{
 		fprintf(stderr, "[%s][%s][%d]: ioctl() failed: %s\n",
-						__FILE__, __FUNCTION__, __LINE__, strerror(errno));
+			__FILE__, __FUNCTION__, __LINE__, strerror(errno));
 	}
 
 	// 设置摄像头缓存的参数
@@ -178,9 +184,12 @@ void cam_config(int xres, int yres, uint32_t pixfmt)
 		ioctl(g_caminfo->camfd, VIDIOC_QUERYBUF, &g_caminfo->v4l2bufs[i]);
 
 		g_caminfo->len[i] = g_caminfo->v4l2bufs[i].length;
-		g_caminfo->frames[i] = mmap(NULL, g_caminfo->v4l2bufs[i].length,
-								  PROT_READ|PROT_WRITE, MAP_SHARED,
-								  g_caminfo->camfd, g_caminfo->v4l2bufs[i].m.offset);
+		g_caminfo->frames[i] = mmap(NULL,
+					  g_caminfo->v4l2bufs[i].length,
+					  PROT_READ|PROT_WRITE,
+					  MAP_SHARED,
+					  g_caminfo->camfd,
+					  g_caminfo->v4l2bufs[i].m.offset);
 
 		ioctl(g_caminfo->camfd , VIDIOC_QBUF, &g_caminfo->v4l2bufs[i]);
 	}
@@ -201,7 +210,7 @@ void cam_open(char *device_name)
 	if(g_caminfo->camfd == -1)
 	{
 		fprintf(stderr, "[%s][%s][%d]: open() failed: %s\n",
-						__FILE__, __FUNCTION__, __LINE__, strerror(errno));
+				__FILE__, __FUNCTION__, __LINE__, strerror(errno));
 		exit(0);
 	}
 }

@@ -33,7 +33,7 @@ int sock_init(int num, char *peer_ip, unsigned short port)
 	if(sockfd == -1)
 	{
 		fprintf(stderr, "[%s][%s][%d] socket() failed: %s\n",
-						__FILE__, __FUNCTION__, __LINE__, strerror(errno));
+			__FILE__, __FUNCTION__, __LINE__, strerror(errno));
 		exit(0);
 	}
 
@@ -42,7 +42,7 @@ int sock_init(int num, char *peer_ip, unsigned short port)
 	if(setsockopt(sockfd, SOL_SOCKET, SO_RCVTIMEO, &tv, sizeof(tv)) == -1)
 	{
 		fprintf(stderr, "[%s][%s][%d] setsockopt() failed: %s\n",
-						__FILE__, __FUNCTION__, __LINE__, strerror(errno));
+			__FILE__, __FUNCTION__, __LINE__, strerror(errno));
 		exit(0);
 	}
 
@@ -52,7 +52,7 @@ int sock_init(int num, char *peer_ip, unsigned short port)
 	if(setsockopt(sockfd, SOL_SOCKET, SO_REUSEADDR, &on, sizeof(on)) == -1)
 	{
 		fprintf(stderr, "[%s][%s][%d] setsockopt() failed: %s\n",
-						__FILE__, __FUNCTION__, __LINE__, strerror(errno));
+			__FILE__, __FUNCTION__, __LINE__, strerror(errno));
 		exit(0);
 	}
 
@@ -64,7 +64,7 @@ int sock_init(int num, char *peer_ip, unsigned short port)
 	if(bind(sockfd, (struct sockaddr *)addr, sizeof(*addr)))
 	{
 		fprintf(stderr, "[%s][%s][%d] bind() failed: %s\n",
-						__FILE__, __FUNCTION__, __LINE__, strerror(errno));
+			__FILE__, __FUNCTION__, __LINE__, strerror(errno));
 		exit(0);
 	}
 
@@ -83,7 +83,8 @@ void wait_each_other(void)
 	// 给对方发去一声问候！
 	char *sayHey = "hello!";
 	sendto(g_udp_sockfd[STATE], sayHey, strlen(sayHey), 0,
-				(struct sockaddr *)g_peer_addr[STATE], sizeof(*(g_peer_addr[STATE])));
+		(struct sockaddr *)g_peer_addr[STATE],
+		sizeof(*(g_peer_addr[STATE])));
 
 	// 静静等候对方的回复（等10毫秒）
 	char msg[20] = {0};
@@ -99,10 +100,13 @@ void wait_each_other(void)
 
 		while(1)
 		{
-			int m = recvfrom(g_udp_sockfd[STATE], msg, 20, 0, NULL, NULL);
+			int m = recvfrom(g_udp_sockfd[STATE], msg,
+				20, 0, NULL, NULL);
+
 			if(m < 0 && errno == EAGAIN)
 			{
-				usleep(150*1000); // 对端没有启动，延迟150毫秒
+				// 对端没有启动，延迟150毫秒
+				usleep(150*1000);
 				continue;	
 			}
 			break;
@@ -110,16 +114,20 @@ void wait_each_other(void)
 
 		// 对方终于来了，并带来了一句问候，立马给对方一句回复！
 		sendto(g_udp_sockfd[STATE], sayHey, strlen(sayHey), 0,
-					(struct sockaddr *)g_peer_addr[STATE], sizeof(*(g_peer_addr[STATE])));
+			(struct sockaddr *)g_peer_addr[STATE],
+			sizeof(*(g_peer_addr[STATE])));
 	}
 	else
 	{
 		while(1)
 		{
-			int m = recvfrom(g_udp_sockfd[STATE], msg, 20, 0, NULL, NULL);
+			int m = recvfrom(g_udp_sockfd[STATE], msg,
+					20, 0, NULL, NULL);
+
 			if(m < 0 && errno == EAGAIN)
 			{
-				usleep(150*1000); // 对端没有启动，延迟150毫秒
+				// 对端没有启动，延迟150毫秒
+				usleep(150*1000);
 				continue;	
 			}
 			break;

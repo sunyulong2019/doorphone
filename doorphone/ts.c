@@ -13,7 +13,6 @@
 ///////////////////////////////////////////////////////////
 
 
-
 #include "lcd.h"
 #include "ts.h"
 
@@ -27,7 +26,7 @@ void ts_init(char *device_name)
 	if(g_ts == NULL)
 	{
 		fprintf(stderr, "[%s][%s][%d] ts_open() failed: %s\n",
-						__FILE__, __FUNCTION__, __LINE__, strerror(errno));
+			__FILE__, __FUNCTION__, __LINE__, strerror(errno));
 		exit(0);
 	}
 
@@ -146,4 +145,4 @@ int pos(int x_ori, int y_ori)
 	// 将手指离开后残留的(0,0)坐标去除
 	ts_read(g_ts, &samp, SENSITIVITY);
 	return (btn_release == btn_ori) ? btn_ori : -1;
-}	
+}

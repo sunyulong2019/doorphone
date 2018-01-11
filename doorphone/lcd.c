@@ -166,7 +166,7 @@ int show_jpg(unsigned char *jpgdata, int size, bool pip, int x, int y)
 					*(tmp_fb_mem+(cinfo.output_scanline-1)*800+j) =
 						row_buf[i+blue ]<<0 |
 						row_buf[i+green]<<8 |
-						row_buf[i+red  ]<<16;
+						row_buf[i+red ]<<16;
 				}
 				i += 3;
 			}

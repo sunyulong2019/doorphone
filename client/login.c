@@ -18,6 +18,8 @@
 #include "lcd.h"
 #include "ts.h"
 
+extern int g_logging_in;
+
 int  g_key_pass_offset;
 static char g_key_pass_buf[6]={0};
 static char g_key_login[6] = "888";

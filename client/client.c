@@ -98,7 +98,7 @@ void *touch_panel(void *arg)
 		else
 		{
 			fprintf(stderr, "[%s][%s][%d] sendto() failed: %s\n",
-							__FILE__, __FUNCTION__, __LINE__, strerror(errno));
+				__FILE__, __FUNCTION__, __LINE__, strerror(errno));
 			exit(0);
 		}
 
@@ -135,8 +135,8 @@ void *recv_jpg(void *arg)
 				break;
 
 			usleep(200*1000);
-		}
 
+		}
 
 		int m = recvfrom(g_udp_sockfd[VIDEO], jpgdata, 50*1024, 0, NULL, NULL);
 		if(m < 0 && errno == EAGAIN)
@@ -194,11 +194,11 @@ void *send_jpg(void *arg)
 
 		cursize = g_caminfo->v4l2bufs[i%CAM_BUF_NUM].bytesused * 2;
 		int m = sendto(g_udp_sockfd[VIDEO], g_caminfo->frames[i%CAM_BUF_NUM], cursize, 0,
-					(struct sockaddr *)g_peer_addr[VIDEO], sizeof(*(g_peer_addr[VIDEO])));
+				(struct sockaddr *)g_peer_addr[VIDEO], sizeof(*(g_peer_addr[VIDEO])));
 		if(m < 0)
 		{
 			fprintf(stderr, "[%s][%s][%d]: sendto() failed: %s\n",
-							__FILE__, __FUNCTION__, __LINE__, strerror(errno));
+				__FILE__, __FUNCTION__, __LINE__, strerror(errno));
 			exit(0);
 		}
 
@@ -223,7 +223,8 @@ void *recv_pcm(void *arg)
 	// 打开PCM设备中的音箱/耳机（PLAYBACK）
 	pthread_mutex_lock(&pcm_lock);
 	g_sound_recv = calloc(1, sizeof(pcm_container));
-	if(snd_pcm_open(&g_sound_recv->handle, "default", SND_PCM_STREAM_PLAYBACK, SND_PCM_ASYNC) != 0)
+	if(snd_pcm_open(&g_sound_recv->handle, "default",
+			SND_PCM_STREAM_PLAYBACK, SND_PCM_ASYNC) != 0)
 	{
 		perror("snd_pcm_open() failed");
 		exit(0);
@@ -246,7 +247,8 @@ void *recv_pcm(void *arg)
 		}
 
 		int n = recvfrom(g_udp_sockfd[AUDIO], g_sound_recv->period_buf,
-						 g_sound_recv->frames_per_period * g_sound_recv->bytes_per_frame, 0, NULL, NULL);
+				 g_sound_recv->frames_per_period * g_sound_recv->bytes_per_frame,
+				 0, NULL, NULL);
 
 		if(n < 0 && errno == EAGAIN)
 		{
@@ -256,7 +258,7 @@ void *recv_pcm(void *arg)
 		if(n < 0)
 		{
 			fprintf(stderr, "[%s][%s][%d] recvfrom() failed: %s\n",
-						__FILE__, __FUNCTION__, __LINE__, strerror(errno));
+				__FILE__, __FUNCTION__, __LINE__, strerror(errno));
 		}
 
 		write_pcm_to_device(g_sound_recv, n/g_sound_recv->bytes_per_frame);
@@ -275,7 +277,7 @@ void *send_pcm(void *arg)
 	g_sound_send = calloc(1, sizeof(pcm_container));
 
 	if((err=snd_pcm_open(&g_sound_send->handle, "default",
-						 SND_PCM_STREAM_CAPTURE, SND_PCM_ASYNC)) != 0)
+				 SND_PCM_STREAM_CAPTURE, SND_PCM_ASYNC)) != 0)
 	{
 		fprintf(stderr, "snd_pcm_open() failed: %s\n", snd_strerror(err));
 		exit(0);
@@ -299,20 +301,20 @@ void *send_pcm(void *arg)
 		}
 
 		snd_pcm_uframes_t n = read_pcm_data(g_sound_send,
-											g_sound_send->frames_per_period);
+						g_sound_send->frames_per_period);
 
 		// 业主端发来监控请求，或者客户端进入了来访请求界面，则给业主端发送语音数据
 		if(g_recv_pcm == ON || g_logging_in == OFF)
 		{
 			int m = sendto(g_udp_sockfd[AUDIO],
-						   g_sound_send->period_buf,
-						   n*g_sound_send->bytes_per_frame, 0,
-						   (struct sockaddr *)g_peer_addr[AUDIO],
-						   sizeof(*(g_peer_addr[AUDIO])));
+					   g_sound_send->period_buf,
+					   n*g_sound_send->bytes_per_frame, 0,
+					   (struct sockaddr *)g_peer_addr[AUDIO],
+					   sizeof(*(g_peer_addr[AUDIO])));
 			if(m < 0)
 			{
 				fprintf(stderr, "[%s][%s][%d] sendto() failed: %s\n",
-								__FILE__, __FUNCTION__, __LINE__, strerror(errno));
+					__FILE__, __FUNCTION__, __LINE__, strerror(errno));
 				exit(0);
 			}
 		}
@@ -341,7 +343,7 @@ void *recv_state(void *arg)
 		if(m < 0)
 		{
 			fprintf(stderr, "[%s][%s][%d] recvfrom() failed: %s\n",
-							__FILE__, __FUNCTION__, __LINE__, strerror(errno));
+				__FILE__, __FUNCTION__, __LINE__, strerror(errno));
 			exit(0);
 		}
 
@@ -391,6 +393,8 @@ void *recv_state(void *arg)
 
 		case 'd': // 业主端要求视频对讲（双向视频传输开始，以画中画显示本地视频）
 			printf("[%c] <-- recved\n", state);
+			if(g_logging_in == ON)
+				break;
 			g_pip = ON;
 			g_recv_jpg = ON;
 			break;
@@ -399,13 +403,14 @@ void *recv_state(void *arg)
 			printf("[%c] <-- recved\n", state);
 			g_pip = OFF;
 			g_recv_jpg = OFF;
+			show_jpg(jpgdata_bg, size_bg, NOTPIP, 80, 0); // 显示一张等待图标
 			break;
 		}
 	}
 }
 
 
-int main(int argc, char *argv[]) // ./talk <IP>
+int main(int argc, char *argv[]) // ./client <IP>
 {
 	// 检查参数合法性
 	if(argc != 2)

@@ -20,6 +20,7 @@ CC = $(CROSS_COMPILE)gcc
 
 $(ELF):$(SRC)
 	$(CC) $^ -o $@ $(CPPFLAGS) $(LDFLAGS)
+	mv $(ELF) ..
 
 clean:
 	-@$(RM) $(ELF)
